@@ -11,6 +11,8 @@ Let's train this one first. Let's train for 1500 steps. After that point, we nee
 Actually, not hotswap decoder. Just stop doing this garbage thing. See what happens after 3k steps.
 """
 
+import pathlib
+
 import torch
 from torch import nn
 from torch import optim
@@ -27,6 +29,11 @@ BATCH_SIZE = 2**6
 INPUT_DIMS = 3 * 128 * 128
 HIDDEN_DIMS = 2**8
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+TENSORBOARD_DIR = pathlib.Path('runs/mask2.1')
+if TENSORBOARD_DIR.exists():
+    print('tensorboard dir already exists. please specify new dir.')
+    quit()
+
 print(f'Using device {DEVICE}')
 
 class Model(nn.Module):
@@ -73,13 +80,19 @@ class Model(nn.Module):
 
             return decoder_output.view(-1, *shape[1:])
 
+    def reset_decoder(self):
+        for layer in self.decoder:
+            if hasattr(layer, 'reset_parameters'):
+                layer.reset_parameters()
+
 
 m = Model()
-m.mask = False
 m.to(DEVICE)
 optimizer = optim.Adam(m.parameters(), lr=1e-3)
 
-writer = SummaryWriter('runs/nomask1')
+
+
+writer = SummaryWriter(TENSORBOARD_DIR)
 
 dataset = ImageDataset('celeba')
 dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
@@ -87,8 +100,10 @@ dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
 i = 0
 while i < 3000:
     for batch in dataloader:
-        if i >= 1500:
+        if i == 1500:
             m.mask = False
+            m.reset_decoder()
+            optimizer = optim.Adam(m.decoder.parameters())
 
         batch = batch.to(DEVICE)
         optimizer.zero_grad()
