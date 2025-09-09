@@ -1,5 +1,14 @@
 """
 The goal of this program is to evaluate the efficacy of adding individual neurons to the loss function.
+
+Ok so the new goal is to evauluate how good the encoder actually is.
+
+The way to do this is to compare apples to apples.
+
+Train a full decoder on both encoders, and whichever one gets lower loss once steady state is reached is the winner.
+
+Let's train this one first. Let's train for 1500 steps. After that point, we need to hotswap the decoder and see what happens.
+Actually, not hotswap decoder. Just stop doing this garbage thing. See what happens after 3k steps.
 """
 
 import torch
@@ -38,6 +47,8 @@ class Model(nn.Module):
             nn.Sigmoid()
         )
 
+        self.mask = True
+
         #
         # self.layer2 = nn.Linear(HIDDEN_DIMS, INPUT_DIMS)
 
@@ -47,11 +58,14 @@ class Model(nn.Module):
         encoder_output = self.encoder(x)
 
         if calculate_loss:
-            masked_inputs = encoder_output.repeat(1, HIDDEN_DIMS).view(-1, HIDDEN_DIMS, HIDDEN_DIMS).tril().view(-1, HIDDEN_DIMS)
-            # decoder_output = self.decoder(encoder_output)
-            decoder_output = self.decoder(masked_inputs)
-            # loss = F.mse_loss(decoder_output, x)
-            loss = F.mse_loss(decoder_output, x.repeat(1, HIDDEN_DIMS).view(-1, INPUT_DIMS))
+            if self.mask:
+                masked_inputs = encoder_output.repeat(1, HIDDEN_DIMS).view(-1, HIDDEN_DIMS, HIDDEN_DIMS).tril().view(-1, HIDDEN_DIMS)
+
+                decoder_output = self.decoder(masked_inputs)
+                loss = F.mse_loss(decoder_output, x.repeat(1, HIDDEN_DIMS).view(-1, INPUT_DIMS))
+            else:
+                decoder_output = self.decoder(encoder_output)
+                loss = F.mse_loss(decoder_output, x)
 
             return decoder_output.view(-1, *shape[1:]), loss
         else:
@@ -61,17 +75,21 @@ class Model(nn.Module):
 
 
 m = Model()
+m.mask = False
 m.to(DEVICE)
 optimizer = optim.Adam(m.parameters(), lr=1e-3)
 
-writer = SummaryWriter('runs/exp4')
+writer = SummaryWriter('runs/nomask1')
 
 dataset = ImageDataset('celeba')
 dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 i = 0
-while True:
+while i < 3000:
     for batch in dataloader:
+        if i >= 1500:
+            m.mask = False
+
         batch = batch.to(DEVICE)
         optimizer.zero_grad()
         output, loss =  m(batch, calculate_loss=True)
@@ -79,7 +97,7 @@ while True:
         optimizer.step()
 
         writer.add_scalar('training_loss', loss.item(), i)
-        image = torch.stack([dataset[i] for i in range(5)])
+        image = torch.stack([dataset[i] for i in range(16)])
         writer.add_images('image_input', image, i)
         writer.add_images('image_ouptut', m(image.to(DEVICE)).detach().cpu(), i)
         print(loss.item())
