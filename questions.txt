@@ -1,0 +1,6 @@
+How much time is spent on io overhead (opening/closing files) in my naive approach? (time here vs time spent actually reading files)
+How much faster is pytorch's dataloader than my naive dataset class?
+
+How similar are the final encodings when using linear dropout vs standard?
+- probably need to create two model training runs
+- but if I were going to have two models in the same program, how would I have the rng have the same weight initializations?
