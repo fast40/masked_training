@@ -5,8 +5,11 @@ Ok so we need to log every so often.
 
 from infra import *
 import torch
+import time
 from torch import optim
+from torch.utils.data import DataLoader
 from celeba import ImageDataset
+from celebanormal import ImageDatasetNormal
 from model import Model
 
 torch.manual_seed(1337)
@@ -19,10 +22,26 @@ optimizer = optim.Adam(m.parameters(), lr=1e-3)
 
 dataset = ImageDataset('celeba', batch_size=BATCH_SIZE)
 
+datasetn = ImageDatasetNormal('celeba')
+dataloader = DataLoader(datasetn, batch_size=BATCH_SIZE)
+
+# t = time.perf_counter()
+# for step, batch in enumerate(dataloader):
+#     if step % 100 == 0:
+#         logger.info(f'Time for 100 batches: {time.perf_counter() - t}s')
+#         logger.info(f'Step {step} ({step * BATCH_SIZE} images loaded)')
+#         logger.info(f'Batch shape: {batch.shape}')
+#
+#         t = time.perf_counter()
+
+t = time.perf_counter()
 for step, batch in enumerate(dataset):
     if step % 100 == 0:
+        logger.info(f'Time for 100 batches: {time.perf_counter() - t}s')
         logger.info(f'Step {step} ({step * BATCH_SIZE} images loaded)')
         logger.info(f'Batch shape: {batch.shape}')
+
+        t = time.perf_counter()
 
     # batch = batch.to(DEVICE)
     # optimizer.zero_grad()

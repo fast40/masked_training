@@ -1,5 +1,7 @@
 How much time is spent on io overhead (opening/closing files) in my naive approach? (time here vs time spent actually reading files)
+- ok so apparently for 11kb file it's like 2x time spent on opening/closing vs reading; at least in python
 How much faster is pytorch's dataloader than my naive dataset class?
+- who gives a fuck (this means I'll do it but later)
 
 How similar are the final encodings when using linear dropout vs standard?
 - probably need to create two model training runs
