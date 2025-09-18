@@ -2,6 +2,7 @@ import contextlib
 import sqlite3
 
 import matplotlib.pyplot as plt
+import datetime
 
 # need to have a files table
 # and a metrics table
@@ -14,7 +15,8 @@ with sqlite3.connect('file.db') as conn, contextlib.closing(conn.cursor()) as cu
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT DEFAULT (datetime('now')),
             path TEXT NOT NULL,
-            series_name TEXT NOT NULL
+            series_name TEXT NOT NULL,
+            run_name TEXT NOT NULL
         );
    ''')
 
@@ -23,7 +25,8 @@ with sqlite3.connect('file.db') as conn, contextlib.closing(conn.cursor()) as cu
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f','now')),
             metric REAL NOT NULL,
-            series_name TEXT NOT NULL
+            series_name TEXT NOT NULL,
+            run_name TEXT NOT NULL
         );
    ''')
 
@@ -46,13 +49,14 @@ def get_metrics(series_name):
         cur.execute(f'SELECT id, timestamp, metric FROM metrics WHERE series_name = ?', (series_name,))
         return cur.fetchall()
 
+
 def get_files(series_name):
     with sqlite3.connect('file.db') as conn, contextlib.closing(conn.cursor()) as cur:
         cur.execute(f'SELECT id, timestamp, path FROM files WHERE series_name = ?', (series_name,))
         return cur.fetchall()
 
 
-value = 30
+value = 35
 
 add_metric('loss', value)
 add_metric('loss', value)
@@ -64,6 +68,6 @@ add_metric('loss', value)
 add_metric('loss', value)
 print(get_metrics('loss'))
 
-plt.plot([m[1] for m in get_metrics('loss')], [m[2] for m in get_metrics('loss')])
+plt.plot([datetime.datetime.fromisoformat(m[1]) for m in get_metrics('loss')], [m[2] for m in get_metrics('loss')])
 plt.title('loss')
 plt.show()

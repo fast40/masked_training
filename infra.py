@@ -1,20 +1,10 @@
-'''
-ok so I just ran into the need to graph a number in matplotlib.
-
-The workflow should literally be to pass the number to a function call. (as well as the label of the graph that's being used)
-auto increment x axis.
-
-I want this shit saved to disk.
-'''
-
-
-
 import pathlib
 import argparse
 import logging
 
 parser = argparse.ArgumentParser(__file__)
-parser.add_argument('-d', '--data-dir', required=True, help='The directory to save data like model checkpoints, loss, and images to.', type=pathlib.Path)
+parser.add_argument('-d', '--data-dir', required=True, help='The parent directory of RUN_DIR.', type=pathlib.Path)
+parser.add_argument('-r', '--run-dir', required=True, help='The directory to save data like model checkpoints, loss, and images to.', type=pathlib.Path)
 parser.add_argument('-l', '--logfile', help='The file to log to.')
 args = parser.parse_args()
 
@@ -27,11 +17,14 @@ logging.info(f'Program started.')
 
 # ----- data dir -----
 
-if args.data_dir.exists():
-    logger.critical(f'{args.data_dir} already exists on your filesystem. Please specify an empty location.')  # TODO: can maybe say empty folder is ok.
+DATA_DIR = args.data_dir
+RUN_DIR = DATA_DIR / args.run_dir
+
+try:
+    RUN_DIR.mkdir(parents=True)
+except FileExistsError:
+    logger.critical(f'{args.run_dir} already exists in {args.data_dir}. Please specify an empty location.')
     quit()
-else:
-    DATA_DIR = args.data_dir
 
 # ----- device -----
 
@@ -46,49 +39,18 @@ else:
 
 logger.info(f'Set DEVICE={DEVICE}')
 
-# ----- graph -----
+# ----- data collection -----
 
-'''
-for now I'm going to assume monotonically increasing x values starting at 0.
-later I can also save x values if need be.
-'''
+import functools
+import data_infra
 
-def save_datapoint(datapoint, graph_name, data_dir=DATA_DIR):
-    with open(DATA_DIR / f'graph_{graph_name}.npy', 'rb')
-    # so we need an np array of x values, and of y values.
-    x_values, y_values = np.save()
-    pass
+DB_FILE = DATA_DIR / 'data.db'
 
+logger.info(f'Initializing tables in {DB_FILE}')
+data_infra.init_tables(DB_FILE)
 
-def save_checkpoint(model):
+logger.info(f'run_name={str(RUN_DIR)}')
 
-def save_image():
+add_metric = functools.partial(data_infra.add_metric, run_name=str(RUN_DIR), db_file=DB_FILE)
+add_file = functools.partial(data_infra.add_file, run_name=str(RUN_DIR), db_file=DB_FILE)
 
-def save_metric():
-
-
-
-run_name
-    images
-        - channel_name
-            - timestamp
-    checkpoints
-        - timestamp
-
-
-it would be cool to also get the most recent run. so to store info about the last run.
-well maybe that should go in the db.
-
-'''
-ok so everything is a timeseries.
-image shifts over time
-model checkpoints shift over time
-loss shifts over time
-other random numbers shift over time.
-
-Some data types should be stored as files.
-some data types should be stored in a database.
-
-
-name_date.ext
-'''
