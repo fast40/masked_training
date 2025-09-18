@@ -53,7 +53,42 @@ for now I'm going to assume monotonically increasing x values starting at 0.
 later I can also save x values if need be.
 '''
 
-def graph(datapoint, graph_name, data_dir=DATA_DIR):
+def save_datapoint(datapoint, graph_name, data_dir=DATA_DIR):
+    with open(DATA_DIR / f'graph_{graph_name}.npy', 'rb')
     # so we need an np array of x values, and of y values.
     x_values, y_values = np.save()
     pass
+
+
+def save_checkpoint(model):
+
+def save_image():
+
+def save_metric():
+
+
+
+run_name
+    images
+        - channel_name
+            - timestamp
+    checkpoints
+        - timestamp
+
+
+it would be cool to also get the most recent run. so to store info about the last run.
+well maybe that should go in the db.
+
+'''
+ok so everything is a timeseries.
+image shifts over time
+model checkpoints shift over time
+loss shifts over time
+other random numbers shift over time.
+
+Some data types should be stored as files.
+some data types should be stored in a database.
+
+
+name_date.ext
+'''
